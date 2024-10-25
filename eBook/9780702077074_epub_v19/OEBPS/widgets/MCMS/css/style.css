@@ -1,7 +1,7 @@
 /*@charset "UTF-8";
 	@namespace "http://www.w3.org/1999/xhtml";
 @namespace epub "http://www.idpf.org/2007/ops";*/
-/* Version 19.2, Date:05 APR 2022 */
+/* Version 19.7, Date:08 JULY 2022 */
 
 body {
 	margin: 0px;
@@ -119,6 +119,9 @@ body {
     color: var(--blue);
     outline-offset: -1px;
 }
+.focus-input.active i,.focus-input.active b, .focus-input.active span, .focus-input.active div {
+    color: var(--blue);
+}
 .active, .slide-thumbnail:hover {
     opacity: 1;
 }
@@ -129,6 +132,9 @@ body {
     color: var(--red);
     position: relative;
 }
+.focus-input.wrong i,.focus-input.wrong b, .focus-input.wrong span, .focus-input.wrong div {
+    color: var(--red);
+}
 .Multiple-choice .focus-input:last-child {
     border-width: 1px 1px 1px 1px;
 }
@@ -138,6 +144,9 @@ body {
     color: var(--green);
     position: relative;
     border-bottom-width: 1px;
+}
+.focus-input.last-child i,.focus-input.last-child b, .focus-input.last-child span, .focus-input.last-child div {
+    color: var(--green);
 }
 .already-answered {
     pointer-events: none;
@@ -254,13 +263,23 @@ i{
     z-index: 9;
 }
 
-.arrow-left.outer, .arrow-right.outer {
+.arrow-left.outer {
     width: 30px;
     height: 30px;
     z-index: 204;
     position: absolute;
     top: 30px;
-    left: 28px;
+    left: 2px;
+    cursor: pointer;
+    border: 1px solid transparent;
+}
+.arrow-right.outer {
+    width: 30px;
+    height: 30px;
+    z-index: 204;
+    position: absolute;
+    top: 30px;
+    right: 2px;
     cursor: pointer;
     border: 1px solid transparent;
 }
@@ -307,7 +326,7 @@ i{
 .arrow-mask {
     position: absolute;
     height: 90px;
-    width: 70px;
+    width: 36px;
 }
 .mcq_toolbar_main {
     overflow: hidden;
@@ -328,7 +347,7 @@ i{
 .steps {
     background: #fff;
     width: auto;
-    transform: translate(3.5px, 0px);
+    /*transform: translate(3.5px, 0px);*/
 }
 .nav.nav-tabs.md-tabs.nav-justified {
     flex-wrap: nowrap;
@@ -336,12 +355,15 @@ i{
     list-style: none;
     text-align: center;
     /* overflow: hidden; */
-    margin: 0px 22px;
+    margin: 0px 0px;
     position: relative;
     left: 0;
+    margin-left: 36px;
+    margin-right: 36px;
+    padding: 0px;
 }
 .steps li.nav-item {
-    margin: 28px 4px;
+    padding: 28px 4px;
     line-height: 15px;
     outline: none;
     border: 1px solid transparent;

@@ -1,4 +1,5 @@
-/* Version 19.3, Date:05 APR 2022 */
+/* Version 19.5, Date:07 July 2022 */
+/* Version 19.7, Date:08 JULY 2022 */
 const correctFBText = "Correct."
 const incorrectFBText = "Incorrect. Please try again."
 var paginationTabindex = 10001;
@@ -8,30 +9,32 @@ const tabButton = document.querySelectorAll(".step");
 const contents = document.querySelectorAll(".tab-pane");
 function getQuestionByEvent(e) {
     var id;
-    if ($(e.target).is('span')) {
-        id = $(e.target).parent().attr('data-id');
-    } else if ($(e.target).is('a')) {
-        id = $(e.target).attr('data-id');
-    }
-    if (id) {
-        getNewQuestion(parseInt(id.split('-')[1]));
-        $('.nav-link').removeClass('active');
+    if($(e.target.closest(".nav-item").length>1) || $(e.target.closest(".nav-link").length>1)){
         if ($(e.target).is('span')) {
-            $(e.target).parent().addClass("active");
-        } else {
-            $(e.target).addClass("active");
+            id = $(e.target).parent().attr('data-id');
+        } else if ($(e.target).is('a')) {
+            id = $(e.target).attr('data-id');
         }
+        if (id) {
+            getNewQuestion(parseInt(id.split('-')[1]));
+            $('.nav-link').removeClass('active');
+            if ($(e.target).is('span')) {
+                $(e.target).parent().addClass("active");
+            } else {
+                $(e.target).addClass("active");
+            }
 
-        $('#questionNumber').focus();
-        if (parseInt(id.split('-')[1]) === quiz.length) {
-            $('.arrow-right').addClass('disabled');
-            $('.arrow-left').removeClass('disabled');
-        } else if (parseInt(id.split('-')[1]) === 1) {
-            $('.arrow-left').addClass('disabled');
-            $('.arrow-right').removeClass('disabled');
-        } else {
-            $('.arrow-right').removeClass('disabled');
-            $('.arrow-left').removeClass('disabled');
+            $('#questionNumber').focus();
+            if (parseInt(id.split('-')[1]) === quiz.length) {
+                $('.arrow-right').addClass('disabled');
+                $('.arrow-left').removeClass('disabled');
+            } else if (parseInt(id.split('-')[1]) === 1) {
+                $('.arrow-left').addClass('disabled');
+                $('.arrow-right').removeClass('disabled');
+            } else {
+                $('.arrow-right').removeClass('disabled');
+                $('.arrow-left').removeClass('disabled');
+            }
         }
     }
 }
@@ -39,8 +42,8 @@ $(".steps").on('click keydown', function (e) {
     if ((e.type === 'keydown' && e.keyCode == 13) || e.type === 'click') {
         getQuestionByEvent(e);
         $ul = $('.steps ul');
-        $ulWrapper = $ul.parent();
-        stepWidth = 38;
+        $ulWrapper = $ul//.parent();
+        stepWidth = $('.steps ul li').outerWidth();
         ulWrapperWidth = $ulWrapper.width();
         wrapperCapacity = ulWrapperWidth / stepWidth;
         totalItemsWidth = $('.steps ul li').length * stepWidth;
@@ -58,8 +61,8 @@ $(".steps").on('click keydown', function (e) {
 });
 function autoDragPagination(selectedStep) {
     $ul = $('.steps ul');
-    $ulWrapper = $ul.parent();
-    stepWidth = 38;
+    $ulWrapper = $ul//.parent();
+    stepWidth = $('.steps ul li').outerWidth();
     ulWrapperWidth = $ulWrapper.width();
     wrapperCapacity = ulWrapperWidth / stepWidth;
     totalItemsWidth = $('.steps ul li').length * stepWidth;
@@ -77,23 +80,25 @@ function autoDragPagination(selectedStep) {
         stepAtCenter = hiddenToLeft + stepCountAtCenter;
     }
     // Applying left
-    if (selectedStep > stepAtCenter) {
-        var newLeft = oldLeft - ((selectedStep - stepAtCenter) * stepWidth);
-        if (newLeft < minLeft) {
-            newLeft = minLeft;
+    if ((ulWrapperWidth - (stepWidth * 2)) < totalItemsWidth) {
+        if (selectedStep > stepAtCenter) {
+            var newLeft = oldLeft - ((selectedStep - stepAtCenter) * stepWidth);
+            if (newLeft < minLeft) {
+                newLeft = minLeft;
+            }
+            // // (totalItemsWidth - ulWrapperWidth)
+            // for(let i = 0; i&lt;=hiddenUnderLeft;i++) {
+            //    // console.log()
+            //    $($('.steps ul li')[i]).find('a').removeAttr('tabindex');
+            // }
+            $ul.css('left', newLeft);
+        } else {
+            var newLeft = oldLeft + ((stepAtCenter - selectedStep) * stepWidth);
+            if (newLeft > maxLeft) {
+                newLeft = maxLeft;
+            }
+            $ul.css('left', newLeft);
         }
-        // // (totalItemsWidth - ulWrapperWidth)
-        // for(let i = 0; i&lt;=hiddenUnderLeft;i++) {
-        //    // console.log()
-        //    $($('.steps ul li')[i]).find('a').removeAttr('tabindex');
-        // }
-        $ul.css('left', newLeft);
-    } else {
-        var newLeft = oldLeft + ((stepAtCenter - selectedStep) * stepWidth);
-        if (newLeft > maxLeft) {
-            newLeft = maxLeft;
-        }
-        $ul.css('left', newLeft);
     }
     // $('.steps ul li a').removeAttr('tabindex');
     // var hiddenUnderLeft = (Math.abs(newLeft)/stepWidth);
@@ -121,6 +126,7 @@ function setAvailableQuestion() {
 }
 // goto question and new question of array
 function getNewQuestion(question) {
+    $('#mcq_button').show();
     selectOption = [];
     QuestionNumber.innerText = "Question " + (question);
     //  &lt;!-- QuestionNumber.innerText = "Question " + (question) + " of " + (quiz.length); 
@@ -177,19 +183,35 @@ function getNewQuestion(question) {
         option.setAttribute('role', 'option');
         optionsIndex++;
         option.className = "focus-input";
+        if (typeof currentQuestion.optionFeedback != 'undefined') {
+            option.setAttribute('data-feedback', currentQuestion.optionFeedback[j]);
+        }
         optionContainer.appendChild(option);
     }
     $('.focus-input').on('keydown click', addActiveClass);
-    $(".focus-input *").on("click", function(e){
+    $(".focus-input *").on("click", function (e) {
+        if($(this).closest(".focus-input").length>0){
+            $(this).closest(".focus-input").click();
+        }
         e.stopPropagation()
     })
-    if(typeof bind_glossary_events == "function"){
+    if (typeof bind_glossary_events == "function") {
         bind_glossary_events();
     }
-    
+
     $('.tab-pane ').attr('data-state', currentQuestion.state);
     $('.tab-pane ').attr('id', question);
+    $(".ic-opt-fbk").remove();
+    var optFeedback = ""
     if (currentQuestion.state === 'wrong') {
+        $('.focus-input').each(function () {
+            if ($(this).attr('data-id') == currentQuestion.userAnswered) {
+                $(this).addClass('wrong');
+                if (typeof currentQuestion.optionFeedback != 'undefined') {
+                    optFeedback = $(this).attr('data-feedback')
+                }
+            }
+        });
         $('#mcq_button').html('Try Again');
         $('#mcq_button').removeClass('disabled');
         $('#mcq_button').attr('title', 'Try Again');
@@ -198,10 +220,14 @@ function getNewQuestion(question) {
         $('#Add_solution').hide();
         $('#need_help').show();
         $('#answer_label').html(incorrectFBText);
+        if (optFeedback != undefined && optFeedback != "") {
+            var feedback = $("<p>").addClass("ic-opt-fbk").html(optFeedback)
+            $('#answer_label').after(feedback);
+        }
         $('#answer_label').removeClass().addClass('not-quite');
     } else if (currentQuestion.state === 'correct') {
         if (question == quiz.length) {
-            $('#mcq_button').html('Done');
+            $('#mcq_button').html('Done').hide();
             $('#mcq_button').attr('title', 'Done');
         } else {
             $('#mcq_button').html('Next Question');
@@ -253,7 +279,7 @@ function addActiveClass(el) {
 
     if ((el.type === 'keydown' && el.keyCode == 13) || el.type === 'click') {
         if (currentQuestion.state !== 'wrong' && !$(el.target).hasClass('wrong') && !$(el.target).hasClass('last-child')) {
-            if(!$(el.target).hasClass("active")){
+            if (!$(el.target).hasClass("active")) {
                 $(el.target).removeClass().addClass('focus-input');
                 selectOption = [];
                 $(el.target).removeClass().addClass('focus-input active');
@@ -273,8 +299,8 @@ function addActiveClass(el) {
                 $('#mcq_button').attr('tabindex', '0');
                 ariaAnnounce('Selected option is ' + $(el.target).text());
             }
-            else{
-                if($('.focus-input.active').length>1){
+            else {
+                if ($('.focus-input.active').length > 1) {
                     $(el.target).removeClass("active");
                 }
             }
@@ -282,6 +308,7 @@ function addActiveClass(el) {
             if (currentQuestion.type != undefined && currentQuestion.type != null && currentQuestion.type != ""
                 && currentQuestion.type == "MCSS" || currentQuestion.type == "TF") {
                 selectOption = [];
+                $(".ic-opt-fbk").remove();
                 $(el.target).prevAll().removeClass().addClass('focus-input');
                 $(el.target).nextAll().removeClass().addClass('focus-input');
                 $(el.target).removeClass().addClass('focus-input active');
@@ -340,7 +367,7 @@ function getResult(element) {
         $(element).attr("role", "img");
         updateAnswerIndicator("correct");
         if (parseInt($('.tab-pane').attr('id')) == quiz.length) {
-            $('#mcq_button').html('Done');
+            $('#mcq_button').html('Done').hide();
             $('#mcq_button').attr('title', 'Done');
         } else {
             $('#mcq_button').html('Next Question');
@@ -362,6 +389,11 @@ function getResult(element) {
         ariaAnnounce('Selected answer' + $(element).text() + ' is correct.');
     }
     else {
+        var optFeedback = $(element).attr('data-feedback')
+        if (optFeedback != undefined && optFeedback != "") {
+            var feedback = $("<p>").addClass("ic-opt-fbk").html(optFeedback)
+            $('#answer_label').after(feedback);
+        }
         if (currentQuestion.answer.length !== selectOption.length) {
             correctMsg.classList.add("not-quite");
             correctMsg.innerHTML = "Incorrect. Please select any " + currentQuestion.answer.length + " Option.";
@@ -430,6 +462,7 @@ function updateAnswerIndicator(markType) {
 }
 $('#mcq_button').on('mousedown click', function (e) {
     if ((e.type === 'keydown' && e.keyCode == 13) || e.type === 'click') {
+        $(".ic-opt-fbk").remove();
         let buttonText = $('#mcq_button').text().split(' ')[0].trim().toLocaleLowerCase();
         if (buttonText === 'check') {
             let answered = $('.Multiple-choice').find('.active');
@@ -465,8 +498,10 @@ $('#mcq_button').on('mousedown click', function (e) {
     }
 })
 window.onload = function () {
+    $(".answer-controls").hide()
     setAvailableQuestion();
     getNewQuestion(1);
+    $(".answer-controls").show()
     answerIndicatot();
     $('#Add_solution').hide();
     $('#Add_solution').children().html(quiz[0].ansText);
@@ -494,6 +529,7 @@ $('#show_ans').on('click keydown', (function (e) {
         setTimeout(() => {
             ariaAnnounce('Correct answer is ' + correctAnswer);
         }, 200);
+        $(".ic-opt-fbk").remove();
         $('#answer_label').hide();
         bind_annotLinkEvents();
     }
@@ -544,22 +580,22 @@ function ariaAnnounce(msg) {
     }, 5000);
 };
 
-function bind_annotLinkEvents(){
+function bind_annotLinkEvents() {
     $('.tab-pane a[href]').on('click', function (e) {
         var annotId = $(this).attr("href");
-        if(!annotId.startsWith("#")){
+        if (!annotId.startsWith("#")) {
             annotId = "#" + annotId;
         }
-        if($(annotId).length>0){
+        if ($(annotId).length > 0) {
             document.location.hash = annotId;
         }
-        else{
-            try{
-                if(typeof parent.annotate_from_frame == "function"){
+        else {
+            try {
+                if (typeof parent.annotate_from_frame == "function") {
                     parent.annotate_from_frame(annotId);
                 }
             }
-            catch(err){
+            catch (err) {
                 //$(this).hide();
             }
         }

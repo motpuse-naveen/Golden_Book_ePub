@@ -1,5 +1,6 @@
 // Handling next prev tooltip click
 /* Version 19, Date:30 MAR 2022 */
+var HTSPOT_MAX = 9;
 function plusSlides(event) {
    var n = parseInt($(event.target).attr('data-nav'));
    var prevToolTip = Utils.getActiveTooltipNumber();
@@ -10,7 +11,7 @@ function plusSlides(event) {
       Utils.ariaAnnounce('Selected, ' + $('#tooltip-' + activeToolTipNumber).find('p').text());
       autoDragPagination(activeToolTipNumber);
    }
-   if (activeToolTipNumber >= 9) {
+   if (activeToolTipNumber >= HTSPOT_MAX) {
       $('.nextContainer a').addClass('disabled');
    } else {
       $('.nextContainer a').removeClass('disabled');
@@ -28,8 +29,10 @@ function plusSlides(event) {
 function autoDragPagination(selectedStep) {
    setTimeout(() => {
       var $ul = $('ul.thumbnail_slidr_inner');
-      $ulWrapper = $ul.parent();
+      //$ulWrapper = $ul.parent();
+      $ulWrapper = $ul//.parent();
       stepWidth = 34;
+      //stepWidth = $ul.find("li").outerWidth();
       ulWrapperWidth = $ulWrapper.width();
       wrapperCapacity = ulWrapperWidth / stepWidth;
       totalItemsWidth = $ul.find('li').length * stepWidth;
@@ -62,6 +65,7 @@ function autoDragPagination(selectedStep) {
 }
 $(document).ready(function () {
    var isSliderDown = false;
+   HTSPOT_MAX = $(".pin").length;
    $(".rail, #imageSlider1").on('mousedown touchstart', () => {
       isSliderDown = true;
    });
@@ -105,7 +109,7 @@ $(document).ready(function () {
 
 
          var activeToolTipNumber = Utils.getActiveTooltipNumber();
-         if (activeToolTipNumber >= 9) {
+         if (activeToolTipNumber >= HTSPOT_MAX) {
             $('.nextContainer a').addClass('disabled');
          } else {
             $('.nextContainer a').removeClass('disabled');
@@ -225,8 +229,8 @@ $(document).ready(function () {
       } else {
          activeTooltipNumber = n;
       }
-      if (activeTooltipNumber > 9) {
-         activeTooltipNumber = 9;
+      if (activeTooltipNumber > HTSPOT_MAX) {
+         activeTooltipNumber = HTSPOT_MAX;
       }
       if (activeTooltipNumber < 1) {
          activeTooltipNumber = 1;
@@ -290,6 +294,7 @@ $(document).ready(function () {
       $(".column[data-tooltipnumber='col_" + Utils.getActiveTooltipNumber() + "']").addClass('selected');
       $(".refresh_btn").removeClass("disabled")
       //;//.addClass('selected');
+      var navHeight = $(".thumbnail_main").height();
       console.log($(".column[data-tooltipnumber]"), Utils.getActiveTooltipNumber())
       // console.log(Utils.getActiveTooltipNumber());
       $imageWrapper.css({ 'left': 0, 'top': 0 });
@@ -309,29 +314,30 @@ $(document).ready(function () {
             isLeftUpdated = true;
          }
          if (toolTipoffset.left < 50) {
-            newLeft = Math.abs(toolTipoffset.left) + 50;
+            newLeft = Math.abs(toolTipoffset.left) + 20;
             isLeftUpdated = true;
          }
          if (toolTipoffset.top < 50) {
             newTop = Math.abs(toolTipoffset.top) + 50;
             isTopUpdated = true;
          }
-         if (toolTipoffset.bottom > winHeight) {
-            newTop = $imageOffset.top - ((toolTipoffset.bottom - winHeight) - 50);
+         if (toolTipoffset.top + toolTipoffset.height > (winHeight - navHeight - 30)) {
+            newTop = $imageOffset.top - ((toolTipoffset.top + toolTipoffset.height) - (winHeight - navHeight) + 30);
+            //newTop = $imageOffset.top - toolTipoffset.height + 50//((toolTipoffset.bottom - winHeight) + 50);
             isTopUpdated = true;
          }
          if (isTopUpdated && isLeftUpdated) {
-            $imageWrapper.animate({ 'left': newLeft + 'px', 'top': newTop + 'px' }, 20);
+            $imageWrapper.animate({ 'left': newLeft + 'px', 'top': newTop + 'px' }, 50);
          } else if (isTopUpdated) {
-            $imageWrapper.animate({ 'top': newTop + 'px' }, 100);
+            $imageWrapper.animate({ 'top': newTop + 'px' }, 50);
          } else if (isLeftUpdated) {
-            $imageWrapper.animate({ 'left': newLeft + 'px' }, 100);
+            $imageWrapper.animate({ 'left': newLeft + 'px' }, 50);
          }
          $tooltip.fadeIn(500);
          $tooltip.find('p').focus();
          $tooltip.addClass('is-visible');
          $tooltip.closest(".tooltipInner").addClass('maxzindex');
-      }, 200);
+      }, 300);
    }
    app.getNewScaleByDirection = function (direction) {
       var newZoom = currentSliderVal;
@@ -394,7 +400,7 @@ $(document).ready(function () {
       if ($imgBoundingBox.height < $(window).height()) {
          newTop = 0;
       }
-      $imageWrapper.animate({ 'top': newTop, 'left': newLeft }, 400);
+      $imageWrapper.animate({ 'top': newTop, 'left': newLeft }, 200);
    }
    app.ariaAnnounce = function (msg) {
       console.log(msg);

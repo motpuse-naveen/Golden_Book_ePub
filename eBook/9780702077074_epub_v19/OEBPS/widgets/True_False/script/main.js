@@ -1,4 +1,5 @@
-/* Version 19.3, Date:05 APR 2022 */
+/* Version 19.5, Date:07 July 2022 */
+/* Version 19.7, Date:08 JULY 2022 */
 const correctFBText = "Correct."
 const incorrectFBText = "Incorrect. Please try again."
 var paginationTabindex = 10001;
@@ -39,8 +40,8 @@ $(".steps").on('click keydown', function (e) {
     if ((e.type === 'keydown' && e.keyCode == 13) || e.type === 'click') {
         getQuestionByEvent(e);
         $ul = $('.steps ul');
-        $ulWrapper = $ul.parent();
-        stepWidth = 38;
+        $ulWrapper = $ul//.parent();
+        stepWidth = $('.steps ul li').outerWidth();
         ulWrapperWidth = $ulWrapper.width();
         wrapperCapacity = ulWrapperWidth / stepWidth;
         totalItemsWidth = $('.steps ul li').length * stepWidth;
@@ -58,8 +59,8 @@ $(".steps").on('click keydown', function (e) {
 });
 function autoDragPagination(selectedStep) {
     $ul = $('.steps ul');
-    $ulWrapper = $ul.parent();
-    stepWidth = 38;
+    $ulWrapper = $ul//.parent();
+    stepWidth = $('.steps ul li').outerWidth();
     ulWrapperWidth = $ulWrapper.width();
     wrapperCapacity = ulWrapperWidth / stepWidth;
     totalItemsWidth = $('.steps ul li').length * stepWidth;
@@ -77,23 +78,25 @@ function autoDragPagination(selectedStep) {
         stepAtCenter = hiddenToLeft + stepCountAtCenter;
     }
     // Applying left
-    if (selectedStep > stepAtCenter) {
-        var newLeft = oldLeft - ((selectedStep - stepAtCenter) * stepWidth);
-        if (newLeft < minLeft) {
-            newLeft = minLeft;
+    if ((ulWrapperWidth - (stepWidth * 2)) < totalItemsWidth) {
+        if (selectedStep > stepAtCenter) {
+            var newLeft = oldLeft - ((selectedStep - stepAtCenter) * stepWidth);
+            if (newLeft < minLeft) {
+                newLeft = minLeft;
+            }
+            // // (totalItemsWidth - ulWrapperWidth)
+            // for(let i = 0; i&lt;=hiddenUnderLeft;i++) {
+            //    // console.log()
+            //    $($('.steps ul li')[i]).find('a').removeAttr('tabindex');
+            // }
+            $ul.css('left', newLeft);
+        } else {
+            var newLeft = oldLeft + ((stepAtCenter - selectedStep) * stepWidth);
+            if (newLeft > maxLeft) {
+                newLeft = maxLeft;
+            }
+            $ul.css('left', newLeft);
         }
-        // // (totalItemsWidth - ulWrapperWidth)
-        // for(let i = 0; i&lt;=hiddenUnderLeft;i++) {
-        //    // console.log()
-        //    $($('.steps ul li')[i]).find('a').removeAttr('tabindex');
-        // }
-        $ul.css('left', newLeft);
-    } else {
-        var newLeft = oldLeft + ((stepAtCenter - selectedStep) * stepWidth);
-        if (newLeft > maxLeft) {
-            newLeft = maxLeft;
-        }
-        $ul.css('left', newLeft);
     }
     // $('.steps ul li a').removeAttr('tabindex');
     // var hiddenUnderLeft = (Math.abs(newLeft)/stepWidth);
@@ -120,6 +123,7 @@ function setAvailableQuestion() {
 }
 // goto question and new question of array
 function getNewQuestion(question) {
+    $('#mcq_button').show();
     QuestionNumber.innerText = "Question " + (question);
     QuestionNumber.setAttribute('aria-label', "Question " + (question));
     QuestionNumber.setAttribute('role', "heading");
@@ -179,12 +183,18 @@ function getNewQuestion(question) {
         option.setAttribute('role', 'option');
         optionsIndex++;
         option.className = "focus-input";
+        if (typeof currentQuestion.optionFeedback != 'undefined') {
+            option.setAttribute('data-feedback', currentQuestion.optionFeedback[j]);
+        }
         optionContainer.appendChild(option);
         // option.setAttribute("onclick","checkResult(this)");
         // option.setAttribute("onclick", "addActiveClass(this)");
     }
     $('.focus-input').on('keydown click', addActiveClass);
     $(".focus-input *").on("click", function(e){
+        if($(this).closest(".focus-input").length>0){
+            $(this).closest(".focus-input").click();
+        }
         e.stopPropagation()
     })
     if(typeof bind_glossary_events == "function"){
@@ -193,10 +203,15 @@ function getNewQuestion(question) {
     
     $('.tab-pane ').attr('data-state', currentQuestion.state);
     $('.tab-pane ').attr('id', question);
+    $(".ic-opt-fbk").remove();
+    var optFeedback = ""
     if (currentQuestion.state === 'wrong') {
         $('.focus-input').each(function () {
             if ($(this).attr('data-id') == currentQuestion.userAnswered) {
                 $(this).addClass('wrong');
+                if (typeof currentQuestion.optionFeedback != 'undefined') {
+                    optFeedback = $(this).attr('data-feedback')
+                }
             }
         });
         $('#mcq_button').html('Try Again');
@@ -217,7 +232,7 @@ function getNewQuestion(question) {
             }
         });
         if (question == quiz.length) {
-            $('#mcq_button').html('Done');
+            $('#mcq_button').html('Done').hide();
             $('#mcq_button').attr('title', 'Done');
         } else {
             $('#mcq_button').html('Next Question');
@@ -256,6 +271,7 @@ function getNewQuestion(question) {
 }
 function addActiveClass(el) {
     if ((el.type === 'keydown' && el.keyCode == 13) || el.type === 'click') {
+        $(".ic-opt-fbk").remove();
         $(el.target).prevAll().removeClass().addClass('focus-input');
         $(el.target).nextAll().removeClass().addClass('focus-input');
         $(el.target).removeClass().addClass('focus-input active');
@@ -280,9 +296,10 @@ function getResult(element) {
         $(element).attr("role", "img");
         updateAnswerIndicator("correct");
         if (parseInt($('.tab-pane').attr('id')) == quiz.length) {
-            $('#mcq_button').html('Done');
+            $('#mcq_button').html('Done').hide();
             $('#mcq_button').attr('title', 'Done');
         } else {
+            $('#mcq_button').show()
             $('#mcq_button').html('Next Question');
             $('#mcq_button').attr('title', 'Next Question');
         }
@@ -304,6 +321,11 @@ function getResult(element) {
     else {
         $(element).removeClass().addClass("focus-input wrong");
         correctMsg.classList.add("not-quite");
+        var optFeedback = $(element).attr('data-feedback')
+        if (optFeedback != undefined && optFeedback != "") {
+            var feedback = $("<p>").addClass("ic-opt-fbk").html(optFeedback)
+            $('#answer_label').after(feedback);
+        }
         correctMsg.innerHTML = incorrectFBText;
         updateAnswerIndicator("wrong");
         $('#mcq_button').html('Try Again');
@@ -375,6 +397,7 @@ function updateAnswerIndicator(markType) {
 }
 $('#mcq_button').on('mousedown click', function (e) {
     if ((e.type === 'keydown' && e.keyCode == 13) || e.type === 'click') {
+        $(".ic-opt-fbk").remove();
         let buttonText = $('#mcq_button').text().split(' ')[0].trim().toLocaleLowerCase();
         if (buttonText === 'check') {
             let answered = $('.Multiple-choice').find('.active');
@@ -408,8 +431,10 @@ $('#mcq_button').on('mousedown click', function (e) {
     }
 })
 window.onload = function () {
+    $(".answer-controls").hide()
     setAvailableQuestion();
     getNewQuestion(1);
+    $(".answer-controls").show()
     answerIndicatot();
     $('#Add_solution').hide();
     $('#Add_solution').children().html(quiz[0].ansText);
@@ -433,6 +458,7 @@ $('#show_ans').on('click keydown', (function (e) {
             }
         })
         $('.focus-input').removeClass('wrong');
+        $(".ic-opt-fbk").remove();
         $('#answer_label').hide();
         bind_annotLinkEvents();
     }
